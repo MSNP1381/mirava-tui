@@ -1,5 +1,7 @@
 # Mirava
 
+> A TUI implementation of the [Mirava](https://github.com/GeeDook/mirava) project. It helps developers in I.R. Iran keep working during internet blackouts by finding accessible mirror endpoints.
+
 Mirava is an interactive terminal app that helps you find working mirror endpoints for:
 
 - Linux package repositories (Debian/Ubuntu/Arch/Alpine and more)
@@ -12,7 +14,14 @@ It checks both:
 
 ## Quick Start
 
-### Option 1: Run a prebuilt binary (recommended)
+### Option 1: Install from PyPI (recommended)
+
+```bash
+pip install mirava-tui
+mirava
+```
+
+### Option 2: Run a prebuilt binary
 
 1. Open the repository's **Releases** page.
 2. Download the binary for your platform.
@@ -31,7 +40,7 @@ chmod +x mirava-<target>
 .\mirava-windows-x64.exe
 ```
 
-### Option 2: Run from source
+### Option 3: Run from source
 
 Requirements:
 
