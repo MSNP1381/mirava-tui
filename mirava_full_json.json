@@ -1,0 +1,454 @@
+{
+    "mirrors": [
+        {
+            "name": "KubarCloud",
+            "url": "https://mirrors.kubarcloud.com/",
+            "description": "Public software mirror hosted by Kubar Cloud, with wide package coverage.",
+            "packages": [
+                "Alpine",
+                "Arch Linux",
+                "CentOS",
+                "Debian",
+                "Ubuntu",
+                "PyPI",
+                "npm"
+            ]
+        },
+        {
+            "name": "Shatel",
+            "url": "https://mirrors.shatel.ir/",
+            "description": "Official mirror provided by the Iranian ISP Shatel.",
+            "packages": [
+                {
+                    "Ubuntu": "https://mirror.shatel.ir/ubuntu"
+                },
+                {
+                    "Debian": "https://mirror.shatel.ir/debian"
+                },
+                {
+                    "Kali": "https://mirror.shatel.ir/kali"
+                }
+            ]
+        },
+        {
+            "name": "ITO (Information Technology Organization)",
+            "url": "https://repo-portal.ito.gov.ir/",
+            "description": "Government-backed repository portal by the Information Technology Organization of Iran.",
+            "packages": [
+                {
+                    "CentOS": [
+                        "https://repo-portal.ito.gov.ir/assets/how_to/CentOS7/CentOS-Base.repo",
+                        "https://repo-portal.ito.gov.ir/assets/how_to/CentOS8/CentOS-Stream-AppStream.repo",
+                        "https://repo-portal.ito.gov.ir/assets/how_to/CentOS8/CentOS-Stream-BaseOS.repo"
+                    ]
+                },
+                {
+                    "Fedora": [
+                        "https://repo-portal.ito.gov.ir/assets/how_to/Fedora/fedora.repo",
+                        "https://repo-portal.ito.gov.ir/assets/how_to/Fedora/fedora-modular.repo",
+                        "https://repo-portal.ito.gov.ir/assets/how_to/Fedora/fedora-updates.repo",
+                        "https://repo-portal.ito.gov.ir/assets/how_to/Fedora/fedora-updates-modular.repo"
+                    ]
+                },
+                {
+                    "Rocky Linux": [
+                        "https://repo-portal.ito.gov.ir/assets/how_to/Rocky9/rocky.repo",
+                        "https://repo-portal.ito.gov.ir/assets/how_to/Rocky9/rocky-extras.repo"
+                    ]
+                },
+                {
+                    "OpenSuse": [
+                        "https://repo-portal.ito.gov.ir/assets/how_to/openSUSE15/repo-non-oss.repo",
+                        "https://repo-portal.ito.gov.ir/assets/how_to/openSUSE15/repo-oss.repo"
+                    ]
+                },
+                {
+                    "Ubuntu":"https://archive.ito.gov.ir/ubuntu"
+                },
+                {
+                    "Debian": "https://archive.ito.gov.ir/debian/"
+                },
+                {
+                    "PyPI": "https://archive.ito.gov.ir/python/"
+                },
+                {
+                    "npm": "https://archive.ito.gov.ir/npm/"
+                },
+                {
+                    "Yarn": "https://archive.ito.gov.ir/npm/"
+                },
+                {
+                    "Composer": "https://archive.ito.gov.ir/composer"
+                },
+                {
+                    "Gradle": [
+                        "https://archive.ito.gov.ir/gradle/maven_central/",
+                        "https://archive.ito.gov.ir/gradle/distributions/gradle-7.6-bin.zip"
+                    ]
+                },
+                {
+                    "Maven": [
+                        "https://archive.ito.gov.ir/gradle/maven_central/",
+                        "https://archive.ito.gov.ir/gradle/maven_plugin/"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Jamko",
+            "url": "https://www.jamko.ir/",
+            "description": "Public software mirror service for various Linux and developer ecosystems.",
+            "packages": [
+                {
+                    "Debian": "https://debian.jamko.ir"
+                },
+                {
+                    "Ubuntu": "https://ubuntu.jamko.ir"
+                },
+                {
+                    "PyPI": "https://pypi.jamko.ir/simple"
+                },
+                {
+                    "Gradle": "https://gradle.jamko.ir"
+                },
+                {
+                    "Maven": "https://maven.jamko.ir"
+                },
+                {
+                    "Android SDK": "https://android.jamko.ir/repository/"
+                },
+                {
+                    "npm": "https://npm.jamko.ir/"
+                },
+                {
+                    "Composer": "https://composer.jamko.ir"
+                },
+                {
+                    "NuGet": "https://nuget.jamko.ir"
+                },
+                {
+                    "Docker Registry": "docker.jamko.ir"
+                },
+                {
+                    "CentOS": "https://rpm.jamko.ir/centos"
+                }
+            ]
+        },
+        {
+            "name": "Runflare",
+            "url": "https://runflare.com/mirrors/",
+            "description": "High-speed domestic mirror service for popular developer tools and package managers.",
+            "packages": [
+                {
+                    "Composer": "https://mirror-composer.runflare.com"
+                },
+                {
+                    "PyPI": "https://mirror-pypi.runflare.com"
+                },
+                {
+                    "npm": "https://mirror-npm.runflare.com"
+                },
+                {
+                    "Yarn": "https://mirror-npm.runflare.com"
+                },
+                {
+                    "NodeJS": "https://mirror-nodejs.runflare.com"
+                },
+                {
+                    "Docker Registry": "mirror-docker.runflare.com"
+                },
+                {
+                    "NuGet": "https://mirror-nuget.runflare.com"
+                },
+                {
+                    "Golang": "https://mirror-go.runflare.com"
+                },
+                {
+                    "EPEL": "https://mirror-epel.runflare.com"
+                },
+                {
+                    "Kubernetes": "https://mirror-k8s.runflare.com"
+                },
+                {
+                    "Maven": "https://mirror-maven.runflare.com"
+                },
+                {
+                    "Gradle": "https://mirror-maven.runflare.com"
+                },
+                {
+                    "Arch Linux": "https://mirror-linux.runflare.com"
+                },
+                {
+                    "Alpine": "https://mirror-linux.runflare.com"
+                },
+                {
+                    "Debian": "https://mirror-linux.runflare.com"
+                },
+                {
+                    "Ubuntu": "https://mirror-linux.runflare.com"
+                },
+                {
+                    "Kali": "https://mirror-linux.runflare.com"
+                },
+                {
+                    "Fedora": "https://mirror-linux.runflare.com"
+                },
+                {
+                    "AlmaLinux": "https://mirror-linux.runflare.com"
+                }
+            ]
+        },
+        {
+            "name": "IUT (Isfahan University of Technology)",
+            "url": "https://repo.iut.ac.ir/",
+            "description": "Local mirror by Isfahan University of Technology offering broad Linux and open-source package coverage.",
+            "packages": [
+                {
+                    "Alpine": [
+                        "http://repo.iut.ac.ir/repo/alpine/@@version@@/main",
+                        "http://repo.iut.ac.ir/repo/alpine/@@version@@/community"
+                    ]
+                },
+                {
+                    "Rocky Linux": [
+                        "https://repo.iut.ac.ir/repo/iutrocky.repo",
+                        "https://repo.iut.ac.ir/repo/iutrocky9.repo",
+                        "https://repo.iut.ac.ir/repo/rocky-linux/"
+                    ]
+                },
+                {
+                    "Debian": "http://repo.iut.ac.ir/debian/"
+                },
+                {
+                    "Ubuntu": "http://repo.iut.ac.ir/ubuntu/"
+                },
+                {
+                    "Mint": "https://repo.iut.ac.ir/mint"
+                },
+                {
+                    "Arch Linux": "http://repo.iut.ac.ir/repo/archlinux/$repo/os/$arch"
+                },
+                {
+                    "Manjaro": "https://repo.iut.ac.ir/repo/manjaro/stable/$repo/$arch"
+                },
+                {
+                    "Raspbian": [
+                        "http://repo.iut.ac.ir/repo/raspbian/raspbian",
+                        "http://repo.iut.ac.ir/repo/archive.raspberrypi.org/debian/"
+                    ]
+                },
+                {
+                    "Fedora": [
+                        "https://repo.iut.ac.ir/repo/iutfedora.repo",
+                        "http://repo.iut.ac.ir/repo/fedora/linux/releases"
+                    ]
+                },
+                {
+                    "OpenSuse": "https://repo.iut.ac.ir/repo/iutopensuse.repo"
+                },
+                {
+                    "OpenBSD": "https://repo.iut.ac.ir/repo/OpenBSD"
+                },
+                {
+                    "CTAN": "https://repo.iut.ac.ir/tex-archive"
+                }
+            ]
+        },
+        {
+            "name": "HamDocker",
+            "url": "https://hub.hamdocker.ir",
+            "description": "Docker containers without sanctions",
+            "packages": [
+                {"Docker Registry":"hub.hamdocker.ir"}
+            ]
+        },
+        {
+            "name": "Myket",
+            "url": "https://maven.myket.ir/",
+            "description": "Android maven repository",
+            "packages": [
+                {
+                    "Maven": "https://maven.myket.ir"
+                }
+            ]
+        },
+        {
+            "name": "Arvancloud",
+            "url": "https://www.arvancloud.ir/en/dev/linux-repository",
+            "description": "Most up-to-date versions of GNU/Linux repositories on Arvancloud mirror servers",
+            "packages": [
+                {
+                    "Debian": [
+                        "http://mirror.arvancloud.ir/debian",
+                        "http://mirror.arvancloud.ir/debian-security"
+                    ]
+                },
+                {
+                    "Ubuntu": "http://mirror.arvancloud.ir/ubuntu"
+                },
+                {
+                    "CentOS": "http://mirror.arvancloud.ir/centos/"
+                },
+                {
+                    "Alpine": [
+                        "https://mirror.arvancloud.ir/alpine/",
+                        "https://mirror.arvancloud.ir/alpine/v3.15/main",
+                        "https://mirror.arvancloud.ir/alpine/v3.15/community"
+                    ]
+                },
+                {
+                    "Arch Linux": "https://mirror.arvancloud.ir/archlinux/"
+                },
+                {
+                    "OpenSuse": [
+                        "http://mirror.arvancloud.ir/opensuse/distribution/leap/",
+                        "http://mirror.arvancloud.ir/opensuse/update/leap/",
+                        "http://mirror.arvancloud.ir/opensuse/debug/distribution/leap/",
+                        "http://mirror.arvancloud.ir/opensuse/source/distribution/leap/"
+                    ]
+                },
+                {
+                    "Manjaro": "https://mirror.arvancloud.ir/manjaro/stable/"
+                }
+            ]
+        },
+        {
+            "name": "Arvancloud",
+            "url": "https://www.arvancloud.ir/fa/dev/docker",
+            "description": "Docker registry mirror in iran hosted by Arvancloud",
+            "packages": [
+                {
+                    "Docker Registry": "docker.arvancloud.ir"
+                }
+            ]
+        },
+        {
+            "name": "IranServer",
+            "url": "https://mirror.iranserver.com/",
+            "description": "IranServer mirror",
+            "packages": [
+                {
+                    "Debian": [
+                        "https://mirror.iranserver.com/debian/",
+                        "https://mirror.iranserver.com/debian-security/"
+                    ]
+                },
+                {
+                    "Ubuntu": "https://mirror.iranserver.com/ubuntu/"
+                },
+                {
+                    "CentOS": "https://mirror.iranserver.com/centos-vault/centos/"
+                },
+                {
+                    "AlmaLinux": "https://mirror.iranserver.com/almalinux/"
+                },
+                {
+                    "EPEL": "https://mirror.iranserver.com/epel/"
+                },
+                {
+                    "Docker Registry": "docker.iranserver.com"
+                },
+                {
+                    "PyPI": "https://mirror.iranserver.com/pypi/simple"
+                },
+                {
+                    "npm": "https://mirror.iranserver.com/npm/"
+                }
+            ]
+        },
+        {
+            "name": "MobinHost",
+            "url": "https://docker.mobinhost.com",
+            "description": "Docker containers without sanctions",
+            "packages": [
+                {
+                    "Docker Registry": "docker.mobinhost.com"
+                }
+            ]
+        },
+        {
+            "name": "Focker",
+            "url": "https://focker.ir",
+            "description": "A docker registry mirror",
+            "packages": [
+                {
+                    "Docker Registry": "focker.ir"
+                }
+            ]
+        },
+        {
+            "name": "MobinHost",
+            "url": "https://mirror.mobinhost.com/",
+            "description": "MobinHost mirror",
+            "packages": [
+                {
+                    "FreeBSD": "https://mirror.mobinhost.com/FreeBSD/"
+                },
+                {
+                    "Almalinux": "https://mirror.mobinhost.com/almalinux/"
+                },
+                {
+                    "Alpine": "https://mirror.mobinhost.com/alpine/"
+                },
+                {
+                    "Archlinux": "https://mirror.mobinhost.com/archlinux/"
+                },
+                {
+                    "Debian": [
+                        "https://mirror.mobinhost.com/debian/",
+                        "https://mirror.mobinhost.com/debian-security/",
+                        "https://mirror.mobinhost.com/debian-backports/"
+                    ]
+                },
+                {
+                    "Fedora EPEL": "https://mirror.mobinhost.com/epel/"
+                },
+                {
+                    "Fedora": "https://mirror.mobinhost.com/fedora/"
+                },
+                {
+                    "Manjaro": "https://mirror.mobinhost.com/manjaro/"
+                },
+                {
+                    "MariaDB": "https://mirror.mobinhost.com/mariadb/"
+                },
+                {
+                    "MongoDB": "https://mirror.mobinhost.com/mongodb/"
+                },
+                {
+                    "Raspbian": "https://mirror.mobinhost.com/raspbian/"
+                },
+                {
+                    "Ubuntu": [
+                        "https://mirror.mobinhost.com/ubuntu/",
+                        "https://mirror.mobinhost.com/ubuntu-releases/"
+                    ]
+                },
+                {
+                    "Zabbix": "https://mirror.mobinhost.com/zabbix/"
+                }
+            ]
+        },
+        {
+            "name": "EN Mirror",
+            "url": "https://en-mirror.ir",
+            "description": "Android/Gradle maven repository",
+            "packages": [
+                "Maven (google)",
+                "Maven (jitpack)",
+                "Maven (maven central)",
+                "Others (Can be added)"
+            ]
+        },
+        {
+            "name": "Ferdowsi University of Mashhad",
+            "url": "https://cran.um.ac.ir/",
+            "description": "The Comprehensive R Archive Network (CRAN)",
+            "packages": [
+                {
+                    "R": "https://cran.um.ac.ir/"
+                }
+            ]
+        }
+    ]
+}

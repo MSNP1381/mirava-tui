@@ -1,0 +1,28 @@
+[project]
+name = "mirava-tui"
+version = "0.1.0"
+description = "TUI wizard for selecting the best Iran mirrors"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "httpx>=0.24",
+  "prompt-toolkit>=3.0",
+]
+
+[project.scripts]
+mirava = "mirava.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mirava"]
+
+[dependency-groups]
+dev = [
+  "zstandard>=0.25.0",
+  "nuitka>=4.0",
+  "patchelf>=0.17.2.4",
+]
+

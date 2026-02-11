@@ -1,0 +1,106 @@
+name: Build Binaries
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-native:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            runner: ubuntu-24.04
+            python_arch: x64
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+            python_arch: arm64
+          - target: windows-x64
+            runner: windows-2022
+            python_arch: x64
+          - target: windows-x86
+            runner: windows-2022
+            python_arch: x86
+          - target: macos-x64
+            runner: macos-13
+            python_arch: x64
+          - target: macos-arm64
+            runner: macos-14
+            python_arch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: ${{ matrix.python_arch }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y patchelf ccache
+
+      - name: Install macOS deps
+        if: runner.os == 'macOS'
+        run: brew install ccache
+
+      - name: Install deps
+        run: uv sync --frozen
+
+      - name: Build
+        run: uv run python scripts/build_nuitka.py --output-filename=mirava-${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirava-${{ matrix.target }}
+          path: |
+            dist/mirava-${{ matrix.target }}
+            dist/mirava-${{ matrix.target }}.exe
+          if-no-files-found: error
+
+  build-linux-x86:
+    name: linux-x86 (docker i386)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build in i386 container
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work i386/ubuntu:24.04 bash -lc '
+            set -euo pipefail
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y \
+              python3 python3-pip gcc g++ patchelf ccache
+            python3 -m pip install --upgrade pip
+            python3 -m pip install \
+              nuitka httpx prompt-toolkit zstandard patchelf
+            NUITKA_CCACHE_BINARY=/usr/bin/ccache CC=gcc \
+              python3 -m nuitka \
+                --onefile \
+                --static-libpython=no \
+                --output-dir=dist \
+                --follow-imports \
+                --include-package=mirava \
+                --include-package=httpx \
+                --include-package=prompt_toolkit \
+                --include-data-file=mirava_full_json.json=mirava_full_json.json \
+                --output-filename=mirava-linux-x86 \
+                mirava/cli.py
+          '
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirava-linux-x86
+          path: dist/mirava-linux-x86
+          if-no-files-found: error
