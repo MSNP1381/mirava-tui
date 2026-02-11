@@ -1,6 +1,6 @@
 [project]
 name = "mirava-tui"
-version = "0.1.1"
+version = "0.1.2"
 description = "TUI wizard for selecting the best Iran mirrors"
 readme = "README.md"
 requires-python = ">=3.9"
