@@ -1,4 +1,5 @@
 import asyncio
+import shutil
 from typing import Dict, List, Optional, Tuple
 
 import httpx
@@ -18,17 +19,87 @@ from .utils import detect_os, os_defaults
 BACK = "__back__"
 QUIT = "__quit__"
 
+# ── Colour palette ──────────────────────────────────────────────────────
+C_ACCENT = "#00bcd4"
+C_OK = "#00e676"
+C_FAIL = "#ff5252"
+C_WARN = "#ffc107"
+C_DIM = "#6c757d"
+C_MUTED = "#495057"
+C_HI_BG = "#1a237e"
+C_HI_FG = "#e8eaf6"
+BOX_W = 54  # inner width of menu box
+
+
+# ── Helpers ─────────────────────────────────────────────────────────────
+
+def _tw() -> int:
+    return shutil.get_terminal_size((80, 24)).columns
+
+
+def _hr(char: str = "─", color: str = C_DIM) -> None:
+    print_formatted_text(HTML(f"<style fg='{color}'>{char * min(_tw(), 90)}</style>"))
+
 
 def _title(text: str) -> None:
-    print_formatted_text(HTML(f"<b><ansicyan>{text}</ansicyan></b>"))
+    print_formatted_text(HTML(f"<style fg='{C_ACCENT}'><b>  {text}</b></style>"))
 
 
 def _subtle(text: str) -> None:
-    print_formatted_text(HTML(f"<style fg='#7f8c8d'>{text}</style>"))
+    print_formatted_text(HTML(f"<style fg='{C_DIM}'>  {text}</style>"))
+
+
+def _success(text: str) -> None:
+    print_formatted_text(HTML(f"<style fg='{C_OK}'>  ✔  {text}</style>"))
+
+
+def _error(text: str) -> None:
+    print_formatted_text(HTML(f"<style fg='{C_FAIL}'>  ✖  {text}</style>"))
 
 
 def _banner() -> None:
-    print_formatted_text(HTML("<b><ansicyan>MIRAVA</ansicyan></b> <style fg='#95a5a6'>Mirror Health Wizard</style>"))
+    logo = [
+        "╔╦╗╦╦═╗╔═╗╦  ╦╔═╗",
+        "║║║║╠╦╝╠═╣╚╗╔╝╠═╣",
+        "╩ ╩╩╩╚═╩ ╩ ╚╝ ╩ ╩",
+    ]
+    w = min(_tw(), 90)
+    print()
+    _hr("━", C_ACCENT)
+    for line in logo:
+        pad = max(0, (w - len(line)) // 2)
+        print_formatted_text(HTML(
+            f"<style fg='{C_ACCENT}'><b>{' ' * pad}{line}</b></style>"
+        ))
+    sub = "Mirror Health Wizard ✦"
+    pad_s = max(0, (w - len(sub)) // 2)
+    print_formatted_text(HTML(
+        f"<style fg='{C_DIM}'>{' ' * pad_s}{sub}</style>"
+    ))
+    _hr("━", C_ACCENT)
+    print()
+
+
+# ── Interactive menu ────────────────────────────────────────────────────
+
+_ICONS: Dict[str, str] = {
+    "OS mirrors": "🖥 ", "Registry mirrors": "📦", "Exit": "🚪",
+    "Run another OS check": "🔄", "Run another registry check": "🔄",
+    "Back to main menu": "↩ ",
+}
+
+# Example package names shown in the prompt for each registry type
+REGISTRY_EXAMPLES: Dict[str, str] = {
+    "PyPI": "e.g. requests, flask, numpy",
+    "npm": "e.g. express, lodash, react",
+    "Docker Registry": "e.g. nginx, ubuntu, python",
+    "Yarn": "e.g. webpack, typescript, vue",
+    "Composer": "e.g. laravel/framework, monolog/monolog",
+    "Maven": "e.g. com.google.guava:guava, org.apache.commons:commons-lang3",
+    "Gradle": "e.g. org.springframework.boot:spring-boot-starter",
+    "NuGet": "e.g. Newtonsoft.Json, Serilog, Dapper",
+    "NodeJS": "e.g. node, v20.11.0",
+}
 
 
 def _menu(
@@ -39,76 +110,92 @@ def _menu(
     default: Optional[str] = None,
     allow_back: bool = False,
 ) -> str:
-    selected_idx = 0
+    sel = 0
     if default and default in options:
-        selected_idx = options.index(default)
+        sel = options.index(default)
 
     result: Optional[str] = None
+    W = BOX_W
 
-    def _get_text() -> FormattedText:
-        lines: list[tuple[str, str]] = []
-        lines.append(("bold ansicyan", title))
-        lines.append(("", "\n"))
-        lines.append(("#7f8c8d", description))
-        lines.append(("", "\n\n"))
+    def _render() -> FormattedText:
+        p: list[tuple[str, str]] = []
+        p.append(("", "\n"))
+        # top border
+        p.append((f"bold {C_ACCENT}", f"  ╭─ {title} "))
+        p.append((C_DIM, "─" * max(0, W - len(title) - 4) + "╮"))
+        p.append(("", "\n"))
+        # description
+        desc_pad = max(0, W - len(description) - 1)
+        p.append((C_DIM, f"  │ {description}" + " " * desc_pad + "│"))
+        p.append(("", "\n"))
+        # separator
+        p.append((C_DIM, "  ├" + "─" * (W + 1) + "┤"))
+        p.append(("", "\n"))
 
         for i, opt in enumerate(options):
-            if i == selected_idx:
-                lines.append(("bold ansiwhite bg:ansiblue", f" ▸ {opt} "))
+            icon = _ICONS.get(opt, "•")
+            label = f"{icon} {opt}"
+            fill = max(0, W - len(label) - 4)
+            if i == sel:
+                p.append((f"bold {C_HI_FG} bg:{C_HI_BG}", f"  │ ▸ {label}" + " " * fill + "│"))
             else:
-                lines.append(("", f"   {opt} "))
-            lines.append(("", "\n"))
+                p.append((C_MUTED, f"  │   {label}" + " " * fill + "│"))
+            p.append(("", "\n"))
 
-        lines.append(("", "\n"))
-        nav = "↑/↓=move  Enter=select  q=quit"
+        # bottom border
+        p.append((C_DIM, "  ╰" + "─" * (W + 1) + "╯"))
+        p.append(("", "\n"))
+
+        # key hints
+        keys = ["↑↓ navigate", "⏎  select", "q quit"]
         if allow_back:
-            nav = "↑/↓=move  Enter=select  b=back  q=quit"
-        lines.append(("#7f8c8d", nav))
-        return FormattedText(lines)
+            keys.insert(2, "b back")
+        p.append((C_DIM, "  " + "  │  ".join(keys)))
+        p.append(("", "\n"))
+        return FormattedText(p)
 
-    text_control = FormattedTextControl(_get_text)
-    window = Window(content=text_control, always_hide_cursor=True)
-    layout = Layout(HSplit([window]))
+    ctrl = FormattedTextControl(_render)
+    layout = Layout(HSplit([Window(content=ctrl, always_hide_cursor=True)]))
 
     kb = KeyBindings()
 
     @kb.add("up")
     @kb.add("k")
-    def _up(event):
-        nonlocal selected_idx
-        selected_idx = (selected_idx - 1) % len(options)
+    def _up(e):
+        nonlocal sel
+        sel = (sel - 1) % len(options)
 
     @kb.add("down")
     @kb.add("j")
-    def _down(event):
-        nonlocal selected_idx
-        selected_idx = (selected_idx + 1) % len(options)
+    def _down(e):
+        nonlocal sel
+        sel = (sel + 1) % len(options)
 
     @kb.add("enter")
-    def _enter(event):
+    def _enter(e):
         nonlocal result
-        result = options[selected_idx]
-        event.app.exit()
+        result = options[sel]
+        e.app.exit()
 
     @kb.add("q")
-    def _quit(event):
+    def _q(e):
         nonlocal result
         result = QUIT
-        event.app.exit()
+        e.app.exit()
 
     if allow_back:
         @kb.add("b")
         @kb.add("escape")
-        def _back(event):
+        def _b(e):
             nonlocal result
             result = BACK
-            event.app.exit()
+            e.app.exit()
 
-    app: Application[None] = Application(layout=layout, key_bindings=kb, full_screen=False)
-    app.run()
-
+    Application(layout=layout, key_bindings=kb, full_screen=False, erase_when_done=True).run()
     return result or QUIT
 
+
+# ── Text input ──────────────────────────────────────────────────────────
 
 def _text_input(
     session: PromptSession,
@@ -117,29 +204,38 @@ def _text_input(
     allow_blank: bool = True,
     allow_back: bool = True,
 ) -> str:
-    suffix = f" [{default}]" if default else ""
-    nav = "(Enter=default, b=back, q=quit)" if allow_back else "(Enter=default, q=quit)"
+    default_hint = f" <style fg='{C_DIM}'>[{default}]</style>" if default else ""
+    hints = [f"<style fg='{C_DIM}'>⏎ default</style>"]
+    if allow_back:
+        hints.append(f"<style fg='{C_DIM}'>b back</style>")
+    hints.append(f"<style fg='{C_DIM}'>q quit</style>")
+    print_formatted_text(HTML("  " + "  ".join(hints)))
+
     while True:
-        raw = session.prompt(f"{label}{suffix}: ").strip()
-        lowered = raw.lower()
-        if lowered in {"q", "quit", "exit"}:
+        raw = session.prompt(
+            HTML(f"<style fg='{C_ACCENT}'><b>  ❯ </b></style>{label}{default_hint}<b>: </b>")
+        ).strip()
+        low = raw.lower()
+        if low in {"q", "quit", "exit"}:
             return QUIT
-        if allow_back and lowered in {"b", "back"}:
+        if allow_back and low in {"b", "back"}:
             return BACK
         if raw == "":
             if default is not None:
                 return default
             if allow_blank:
                 return ""
-            print_formatted_text(HTML(f"<ansired>{label} is required.</ansired>"))
+            _error(f"{label} is required.")
             continue
         return raw
 
 
-def _package_word(result: CheckResult) -> str:
-    if result.package_ok is True:
+# ── Result helpers ──────────────────────────────────────────────────────
+
+def _package_word(r: CheckResult) -> str:
+    if r.package_ok is True:
         return "FOUND"
-    if result.package_ok is False:
+    if r.package_ok is False:
         return "NOT FOUND"
     return "SKIPPED"
 
@@ -147,7 +243,16 @@ def _package_word(result: CheckResult) -> str:
 def _shorten(value: str, width: int) -> str:
     if len(value) <= width:
         return value
-    return value[: max(0, width - 3)] + "..."
+    return value[: max(0, width - 3)] + "…"
+
+
+def _progress_bar(done: int, total: int, width: int = 28) -> str:
+    ratio = done / total if total else 0
+    filled = int(width * ratio)
+    return (
+        f"<style fg='{C_ACCENT}'>{'█' * filled}{'░' * (width - filled)}</style>"
+        f" <style fg='{C_DIM}'>{int(ratio * 100):>3}%</style>"
+    )
 
 
 def _build_table(rows: List[List[str]], headers: List[str]) -> str:
@@ -156,20 +261,26 @@ def _build_table(rows: List[List[str]], headers: List[str]) -> str:
         for i, cell in enumerate(row):
             widths[i] = max(widths[i], len(cell))
 
-    border = "+" + "+".join("-" * (w + 2) for w in widths) + "+"
+    def line(l: str, m: str, r: str, f: str = "─") -> str:
+        return l + m.join(f * (w + 2) for w in widths) + r
 
-    def fmt_row(row: List[str]) -> str:
-        cells = [f" {cell.ljust(widths[i])} " for i, cell in enumerate(row)]
-        return "|" + "|".join(cells) + "|"
+    def fmt(row: List[str]) -> str:
+        return "│" + "│".join(f" {c.ljust(widths[i])} " for i, c in enumerate(row)) + "│"
 
-    lines = [border, fmt_row(headers), border]
-    for row in rows:
-        lines.append(fmt_row(row))
-    lines.append(border)
-    return "\n".join(lines)
+    return "\n".join(
+        [line("┌", "┬", "┐"), fmt(headers), line("├", "┼", "┤")]
+        + [fmt(r) for r in rows]
+        + [line("└", "┴", "┘")]
+    )
 
 
-async def _run_checks(endpoints: List[PackageEndpoint], package: Optional[str], os_kwargs: Dict[str, str]) -> List[CheckResult]:
+# ── Network checks ─────────────────────────────────────────────────────
+
+async def _run_checks(
+    endpoints: List[PackageEndpoint],
+    package: Optional[str],
+    os_kwargs: Dict[str, str],
+) -> List[CheckResult]:
     timeout = httpx.Timeout(8.0, connect=4.0)
     limits = httpx.Limits(max_connections=20, max_keepalive_connections=10)
     async with httpx.AsyncClient(timeout=timeout, limits=limits) as client:
@@ -177,16 +288,13 @@ async def _run_checks(endpoints: List[PackageEndpoint], package: Optional[str], 
 
         async def worker(ep: PackageEndpoint, url: str) -> CheckResult:
             async with sem:
-                registry = registry_for(ep.name)
-                reachable, latency, detail, pkg_ok, pkg_detail = await registry.check(
-                    client,
-                    url,
-                    package=package,
-                    **os_kwargs,
+                reg = registry_for(ep.name)
+                reachable, latency, detail, pkg_ok, pkg_detail = await reg.check(
+                    client, url, package=package, **os_kwargs,
                 )
-                detail_full = detail
+                d = detail
                 if pkg_detail:
-                    detail_full = f"{detail_full}; {pkg_detail}" if detail_full else pkg_detail
+                    d = f"{d}; {pkg_detail}" if d else pkg_detail
                 return CheckResult(
                     mirror_name=ep.mirror_name,
                     endpoint_name=ep.name,
@@ -194,113 +302,140 @@ async def _run_checks(endpoints: List[PackageEndpoint], package: Optional[str], 
                     reachable=reachable,
                     latency_ms=latency,
                     package_ok=pkg_ok,
-                    detail=detail_full,
+                    detail=d,
                 )
 
-        tasks = [asyncio.create_task(worker(ep, url)) for ep in endpoints for url in ep.urls]
+        tasks = [asyncio.create_task(worker(ep, u)) for ep in endpoints for u in ep.urls]
         total = len(tasks)
         done = 0
         results: List[CheckResult] = []
         loop = asyncio.get_running_loop()
-        started = loop.time()
+        t0 = loop.time()
 
         for task in asyncio.as_completed(tasks):
-            result = await task
-            results.append(result)
+            r = await task
+            results.append(r)
             done += 1
-            elapsed = loop.time() - started
-            print_formatted_text(
-                HTML(
-                    f"<style fg='#7f8c8d'>[{done}/{total}] "
-                    f"{result.endpoint_name} on {result.mirror_name} -> "
-                    f"{'OK' if result.reachable else 'FAIL'} / {_package_word(result)} "
-                    f"({elapsed:.1f}s elapsed)</style>"
-                )
-            )
+            dt = loop.time() - t0
+            mark = f"<style fg='{C_OK}'>✔</style>" if r.reachable else f"<style fg='{C_FAIL}'>✖</style>"
+            print_formatted_text(HTML(
+                f"  {_progress_bar(done, total)}  {mark} "
+                f"<style fg='{C_DIM}'>{r.endpoint_name}</style> on "
+                f"<b>{r.mirror_name}</b>  "
+                f"<style fg='{C_DIM}'>{dt:.1f}s</style>"
+            ))
         return results
 
 
-def _collect_os_kwargs(session: PromptSession, os_choice: str, base_kwargs: Dict[str, str]) -> Tuple[str, Dict[str, str]]:
-    kwargs = dict(base_kwargs)
+# ── OS kwargs collection ────────────────────────────────────────────────
+
+def _collect_os_kwargs(
+    session: PromptSession, os_choice: str, base_kwargs: Dict[str, str],
+) -> Tuple[str, Dict[str, str]]:
+    kw = dict(base_kwargs)
 
     if os_choice in {"Debian", "Ubuntu", "Kali", "Mint", "Raspbian"}:
-        suite = _text_input(session, "Suite/Codename", kwargs.get("suite", ""), allow_blank=False)
-        if suite in {BACK, QUIT}:
-            return suite, kwargs
-        component = _text_input(session, "Component", kwargs.get("component", "main"), allow_blank=False)
-        if component in {BACK, QUIT}:
-            return component, kwargs
-        arch = _text_input(session, "Architecture", kwargs.get("arch", "amd64"), allow_blank=False)
-        if arch in {BACK, QUIT}:
-            return arch, kwargs
-        kwargs.update({"suite": suite, "component": component, "arch": arch})
+        for key, label, fallback in [
+            ("suite", "Suite/Codename", ""),
+            ("component", "Component", "main"),
+            ("arch", "Architecture", "amd64"),
+        ]:
+            v = _text_input(session, label, kw.get(key, fallback), allow_blank=False)
+            if v in {BACK, QUIT}:
+                return v, kw
+            kw[key] = v
 
     elif os_choice in {"Arch Linux", "Manjaro", "Archlinux"}:
-        repo = _text_input(session, "Repository", kwargs.get("repo", "core"), allow_blank=False)
-        if repo in {BACK, QUIT}:
-            return repo, kwargs
-        arch = _text_input(session, "Architecture", kwargs.get("arch", "x86_64"), allow_blank=False)
-        if arch in {BACK, QUIT}:
-            return arch, kwargs
-        kwargs.update({"repo": repo, "arch": arch})
+        for key, label, fallback in [("repo", "Repository", "core"), ("arch", "Architecture", "x86_64")]:
+            v = _text_input(session, label, kw.get(key, fallback), allow_blank=False)
+            if v in {BACK, QUIT}:
+                return v, kw
+            kw[key] = v
 
     elif os_choice in {"Alpine"}:
-        branch = _text_input(session, "Branch", kwargs.get("branch", "v3.18"), allow_blank=False)
-        if branch in {BACK, QUIT}:
-            return branch, kwargs
-        repo = _text_input(session, "Repository", kwargs.get("repo", "main"), allow_blank=False)
-        if repo in {BACK, QUIT}:
-            return repo, kwargs
-        arch = _text_input(session, "Architecture", kwargs.get("arch", "x86_64"), allow_blank=False)
-        if arch in {BACK, QUIT}:
-            return arch, kwargs
-        kwargs.update({"branch": branch, "repo": repo, "arch": arch})
+        for key, label, fallback in [
+            ("branch", "Branch", "v3.18"),
+            ("repo", "Repository", "main"),
+            ("arch", "Architecture", "x86_64"),
+        ]:
+            v = _text_input(session, label, kw.get(key, fallback), allow_blank=False)
+            if v in {BACK, QUIT}:
+                return v, kw
+            kw[key] = v
 
-    return "ok", kwargs
+    return "ok", kw
 
 
-def _run_and_show(endpoints: List[PackageEndpoint], package: Optional[str], os_kwargs: Dict[str, str]) -> None:
-    _title("Checking mirrors")
+# ── Results display ─────────────────────────────────────────────────────
+
+def _run_and_show(
+    endpoints: List[PackageEndpoint],
+    package: Optional[str],
+    os_kwargs: Dict[str, str],
+) -> None:
+    print()
+    _hr("─", C_DIM)
+    _title("⏳ Checking mirrors…")
     _subtle("Live progress:")
+    print()
+
     results = asyncio.run(_run_checks(endpoints, package, os_kwargs))
     sorted_results = sorted(results, key=lambda r: (not r.reachable, r.latency_ms or 1e9))
 
+    ok_count = sum(1 for r in sorted_results if r.reachable)
+    fail_count = len(sorted_results) - ok_count
+
     rows: List[List[str]] = []
-    for result in sorted_results:
-        latency = f"{result.latency_ms:.0f}ms" if result.latency_ms is not None else "-"
-        rows.append(
-            [
-                "OK" if result.reachable else "FAIL",
-                _package_word(result),
-                latency,
-                _shorten(result.mirror_name, 36),
-                _shorten(result.url, 52),
-                _shorten(result.detail or "-", 44),
-            ]
-        )
+    for r in sorted_results:
+        lat = f"{r.latency_ms:.0f}ms" if r.latency_ms is not None else "—"
+        rows.append([
+            "✔ OK" if r.reachable else "✖ FAIL",
+            _package_word(r),
+            lat,
+            _shorten(r.mirror_name, 36),
+            _shorten(r.url, 52),
+            _shorten(r.detail or "—", 44),
+        ])
 
     print()
-    _title("Results")
-    print(
-        _build_table(
-            rows,
-            headers=["Reach", "Package", "Latency", "Mirror", "Endpoint", "Reason"],
-        )
-    )
-    _subtle("Reach=OK means endpoint responded successfully. Reach=FAIL means endpoint unreachable or returned an error status.")
-    _subtle("Package=FOUND means the package/image index lookup succeeded. Package=NOT FOUND means mirror reachable but item missing.")
-    _subtle("Package=SKIPPED means no package/image name was provided for that run.")
+    _hr("─", C_ACCENT)
+    _title("📊 Results")
+    print_formatted_text(HTML(
+        f"  <style fg='{C_OK}'><b>{ok_count}</b> reachable</style>"
+        f"  <style fg='{C_DIM}'>│</style>  "
+        f"<style fg='{C_FAIL}'><b>{fail_count}</b> failed</style>"
+        f"  <style fg='{C_DIM}'>│</style>  "
+        f"<style fg='{C_DIM}'>{len(sorted_results)} total</style>"
+    ))
+    print()
+
+    print(_build_table(
+        rows,
+        headers=["Reach", "Package", "Latency", "Mirror", "Endpoint", "Reason"],
+    ))
+
+    print()
+    _hr("·", C_DIM)
+    _subtle("✔ OK = endpoint responded    ✖ FAIL = unreachable or error")
+    _subtle("FOUND = package exists       NOT FOUND = mirror OK but item missing")
+    _subtle("SKIPPED = no package name provided")
+    _hr("·", C_DIM)
 
 
-def _os_flow(session: PromptSession, mirrors, all_names: List[str], os_default: Optional[str], base_kwargs: Dict[str, str]) -> str:
-    os_names = [name for name in all_names if name in OS_NAMES]
+# ── Flows ───────────────────────────────────────────────────────────────
+
+def _os_flow(
+    session: PromptSession, mirrors, all_names: List[str],
+    os_default: Optional[str], base_kwargs: Dict[str, str],
+) -> str:
+    os_names = [n for n in all_names if n in OS_NAMES]
 
     while True:
         print()
         choice = _menu(
             session,
             title="OS Mirror Checks",
-            description="Choose your OS mirror type. Your local OS is preselected when detected.",
+            description="Choose your OS. Detected OS is preselected.",
             options=os_names,
             default=os_default,
             allow_back=True,
@@ -310,8 +445,11 @@ def _os_flow(session: PromptSession, mirrors, all_names: List[str], os_default: 
         if choice == BACK:
             return BACK
 
-        pkg_prompt = f"OS package for {choice} (optional, e.g. curl, gcc, linux-headers)"
-        package = _text_input(session, pkg_prompt, default="", allow_blank=True)
+        package = _text_input(
+            session,
+            f"OS package for {choice} (optional, e.g. curl, gcc)",
+            default="", allow_blank=True,
+        )
         if package == QUIT:
             return QUIT
         if package == BACK:
@@ -323,15 +461,14 @@ def _os_flow(session: PromptSession, mirrors, all_names: List[str], os_default: 
         if status == BACK:
             continue
 
-        endpoints: List[PackageEndpoint] = []
-        for mirror in mirrors:
-            endpoints.extend(mirror.packages_by_name(choice))
-
-        if not endpoints:
-            print_formatted_text(HTML("<ansired>No mirrors found for that OS choice.</ansired>"))
+        eps: List[PackageEndpoint] = []
+        for m in mirrors:
+            eps.extend(m.packages_by_name(choice))
+        if not eps:
+            _error("No mirrors found for that OS choice.")
             continue
 
-        _run_and_show(endpoints, package or None, os_kwargs)
+        _run_and_show(eps, package or None, os_kwargs)
 
         post = _menu(
             session,
@@ -348,16 +485,16 @@ def _os_flow(session: PromptSession, mirrors, all_names: List[str], os_default: 
 
 
 def _registry_flow(session: PromptSession, mirrors, all_names: List[str]) -> str:
-    registry_names = [name for name in all_names if name in REGISTRY_NAMES]
+    reg_names = [n for n in all_names if n in REGISTRY_NAMES]
 
     while True:
         print()
         choice = _menu(
             session,
             title="Registry Mirror Checks",
-            description="Choose the package registry you want to test.",
-            options=registry_names,
-            default="PyPI" if "PyPI" in registry_names else None,
+            description="Choose the package registry to test.",
+            options=reg_names,
+            default="PyPI" if "PyPI" in reg_names else None,
             allow_back=True,
         )
         if choice == QUIT:
@@ -365,10 +502,10 @@ def _registry_flow(session: PromptSession, mirrors, all_names: List[str]) -> str
         if choice == BACK:
             return BACK
 
-        example = "python package" if choice == "PyPI" else "image name" if choice == "Docker Registry" else "package name"
+        ex = REGISTRY_EXAMPLES.get(choice, "e.g. package-name")
         package = _text_input(
             session,
-            f"Package/Image for {choice} (required, {example})",
+            f"Package/Image for {choice} ({ex})",
             allow_blank=False,
         )
         if package == QUIT:
@@ -376,15 +513,14 @@ def _registry_flow(session: PromptSession, mirrors, all_names: List[str]) -> str
         if package == BACK:
             continue
 
-        endpoints: List[PackageEndpoint] = []
-        for mirror in mirrors:
-            endpoints.extend(mirror.packages_by_name(choice))
-
-        if not endpoints:
-            print_formatted_text(HTML("<ansired>No mirrors found for that registry choice.</ansired>"))
+        eps: List[PackageEndpoint] = []
+        for m in mirrors:
+            eps.extend(m.packages_by_name(choice))
+        if not eps:
+            _error("No mirrors found for that registry choice.")
             continue
 
-        _run_and_show(endpoints, package, {})
+        _run_and_show(eps, package, {})
 
         post = _menu(
             session,
@@ -400,7 +536,17 @@ def _registry_flow(session: PromptSession, mirrors, all_names: List[str]) -> str
             return BACK
 
 
+# ── Entry point ─────────────────────────────────────────────────────────
+
 def main() -> None:
+    try:
+        _main_inner()
+    except KeyboardInterrupt:
+        print()
+        _subtle("Goodbye! ✦")
+
+
+def _main_inner() -> None:
     mirrors = load_mirrors("mirava_full_json.json")
     all_names = list_package_names(mirrors)
 
@@ -410,10 +556,8 @@ def main() -> None:
     session = PromptSession()
 
     _banner()
-    _subtle("Type b for back, q to quit. Press Enter to accept defaults and continue.")
 
     while True:
-        print()
         mode = _menu(
             session,
             title="Main Menu",
@@ -424,17 +568,17 @@ def main() -> None:
         )
 
         if mode in {QUIT, "Exit"}:
+            print()
+            _subtle("Goodbye! ✦")
             return
 
         if mode == "OS mirrors":
-            action = _os_flow(session, mirrors, all_names, os_default, base_os_kwargs)
-            if action == QUIT:
+            if _os_flow(session, mirrors, all_names, os_default, base_os_kwargs) == QUIT:
                 return
             continue
 
         if mode == "Registry mirrors":
-            action = _registry_flow(session, mirrors, all_names)
-            if action == QUIT:
+            if _registry_flow(session, mirrors, all_names) == QUIT:
                 return
             continue
 
