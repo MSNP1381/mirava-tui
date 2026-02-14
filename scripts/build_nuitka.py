@@ -67,11 +67,23 @@ def main() -> None:
     entry = project_root / "mirava" / "cli.py"
     data_file = project_root / "mirava_full_json.json"
 
+    no_compress = os.environ.get("NUITKA_ONEFILE_NO_COMPRESSION", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
     cmd = [
         sys.executable,
         "-m",
         "nuitka",
         "--onefile",
+        *(
+            ["--onefile-no-compression"]
+            if no_compress
+            else []
+        ),
         "--static-libpython=no",
         "--output-dir=dist",
         "--follow-imports",
