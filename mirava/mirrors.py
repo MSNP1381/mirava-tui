@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, Iterable, List
+from typing import Iterable, List
 
 from .models import Mirror, PackageEndpoint
 from .utils import normalize_url

@@ -1,28 +1,103 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import Optional, Tuple
+import importlib.util
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
 
-import httpx
 
-from .base import BaseRegistry
+def _has_module(name: str) -> bool:
+    return importlib.util.find_spec(name) is not None
 
 
-class PyPIRegistry(BaseRegistry):
-    name = "PyPI"
+def _check_requirements() -> None:
+    if not _has_module("zstandard"):
+        print("Missing Python package 'zstandard' (onefile compression disabled).", file=sys.stderr)
+        print("Install with: uv add zstandard", file=sys.stderr)
 
-    async def check_package(self, client: httpx.AsyncClient, url: str, package: str, **kwargs) -> Tuple[Optional[bool], str]:
-        package = package.strip().lower()
-        if not package:
-            return None, "no package"
-        if not url.endswith("/"):
-            url = url + "/"
-        check_url = f"{url}simple/{package}/"
-        try:
-            resp = await client.get(check_url, follow_redirects=True)
-            if resp.status_code == 200:
-                return True, "found"
-            if resp.status_code == 404:
-                return False, "not found"
-            return False, f"http {resp.status_code}"
-        except httpx.RequestError as exc:
-            return False, str(exc)
+    if sys.platform.startswith("linux") and shutil.which("patchelf") is None:
+        print("Missing patchelf. Install with one of:", file=sys.stderr)
+        print("  uv add patchelf", file=sys.stderr)
+        print("  sudo apt-get install patchelf", file=sys.stderr)
+        raise SystemExit(1)
+
+
+def _select_compiler() -> str | None:
+    if os.environ.get("CC"):
+        return os.environ["CC"]
+
+    if sys.platform == "win32":
+        # On Windows we ask Nuitka to use MSVC explicitly.
+        # Exporting CC here can force gcc/clang and conflict with --msvc.
+        return None
+
+    for candidate in ("gcc", "clang"):
+        path = shutil.which(candidate)
+        if path:
+            return candidate
+
+    print("Missing C compiler (gcc/clang). Install build tools first.", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def main() -> None:
+    _check_requirements()
+
+    env = os.environ.copy()
+    compiler = _select_compiler()
+    if compiler:
+        env["CC"] = compiler
+
+    ccache = shutil.which("ccache")
+    if ccache and compiler in {"gcc", "clang"}:
+        env["NUITKA_CCACHE_BINARY"] = ccache
+        print(f"Using compiler: {compiler} (ccache: {ccache})")
+    else:
+        if compiler:
+            print(f"Using compiler: {compiler}")
+        elif sys.platform == "win32":
+            print("Using compiler: msvc (enforced by --msvc=latest)")
+        else:
+            print("Using auto compiler detection")
+
+    project_root = Path(__file__).resolve().parents[1]
+    entry = project_root / "mirava" / "cli.py"
+    data_file = project_root / "mirava_full_json.json"
+
+    no_compress = os.environ.get("NUITKA_ONEFILE_NO_COMPRESSION", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "nuitka",
+        "--onefile",
+        *(
+            ["--onefile-no-compression"]
+            if no_compress
+            else []
+        ),
+        "--static-libpython=no",
+        "--output-dir=dist",
+        "--follow-imports",
+        "--include-package=mirava",
+        "--include-package=httpx",
+        "--include-package=prompt_toolkit",
+        f"--include-data-file={data_file}=mirava_full_json.json",
+        "--msvc=latest" if sys.platform == "win32" else "",
+        str(entry),
+        *sys.argv[1:],
+    ]
+
+    subprocess.run(cmd, check=True, cwd=project_root, env=env)
+
+
+if __name__ == "__main__":
+    main()

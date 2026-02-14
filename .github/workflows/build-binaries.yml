@@ -27,7 +27,7 @@ jobs:
             runner: windows-2022
             python_arch: x86
           - target: macos-x64
-            runner: macos-13
+            runner: macos-15-intel
             python_arch: x64
           - target: macos-arm64
             runner: macos-14
@@ -57,6 +57,8 @@ jobs:
         run: uv sync --frozen
 
       - name: Build
+        env:
+          NUITKA_ONEFILE_NO_COMPRESSION: "1"
         run: uv run python scripts/build_nuitka.py --output-filename=mirava-${{ matrix.target }}
 
       - name: Upload artifact
@@ -74,9 +76,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Enable QEMU for linux/386
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: "386"
+
       - name: Build in i386 container
         run: |
-          docker run --rm -v "$PWD:/work" -w /work i386/ubuntu:24.04 bash -lc '
+          docker run --platform=linux/386 --rm -v "$PWD:/work" -w /work i386/ubuntu:24.04 bash -lc '
             set -euo pipefail
             apt-get update
             DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -87,6 +94,7 @@ jobs:
             NUITKA_CCACHE_BINARY=/usr/bin/ccache CC=gcc \
               python3 -m nuitka \
                 --onefile \
+                --onefile-no-compression \
                 --static-libpython=no \
                 --output-dir=dist \
                 --follow-imports \
